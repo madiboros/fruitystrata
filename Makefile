@@ -1,7 +1,7 @@
 # UnbiasedStrata build.  Needs CMake 3.24+, a C++20 compiler and the CUDA toolkit.  Nothing is downloaded.
 BUILD_DIR  ?= build
-# RTX 30 (86), RTX 40 (89) and RTX 50 (120) in one binary.  sm_120 needs CUDA 12.8+, and upstream recommends 13.0+.
-CUDA_ARCHS ?= 86;89;120
+# This hardware-focused fork targets the Alienware RTX 2080 Super (Turing, sm_75) by default.
+CUDA_ARCHS ?= 75
 # capped: inside a container nproc reports the host's CPUs, not the container's quota
 JOBS       ?= $(shell n=$$(nproc 2>/dev/null || echo 4); [ $$n -gt 16 ] && n=16; echo $$n)
 
