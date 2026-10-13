@@ -77,14 +77,15 @@ The current Pithagoras `nova-psycho` profile points to `http://<ALIENWARE_LAN_IP
 
 ## Validation and performance notes
 
-The deployed Alienware profile has started successfully with the 131,072-token context setting, the IQ3_XXS pack, and MTP enabled. The available benchmark is a single smoke test on the earlier Alienware lab build—not a repeatable benchmark of every commit in this repository:
+The deployed Alienware profile has started successfully with the 131,072-token context setting, the IQ3_XXS pack, and MTP enabled. The owner reports successfully testing a full 128K context at roughly 18–20 tokens/s. The separate smoke-test measurements below came from an earlier Alienware lab build, not a repeatable benchmark of every commit in this repository:
 
 | Test | Result |
 | --- | ---: |
-| Prompt prefill, 32,420-token prompt | 146.8 tokens/s |
-| Decode, separate 125-token reply | 23.8 tokens/s |
+| Full 128K context run (owner-reported) | roughly 18–20 tokens/s |
+| Prompt prefill, 32,420-token prompt (separate smoke test) | 146.8 tokens/s |
+| Decode, separate 125-token reply (separate smoke test) | 23.8 tokens/s |
 
-These figures are workload- and cache-dependent. The prompt and reply measurements came from separate requests. A 131,072-token configured context is not evidence that a full 128K prompt was tested; the recorded prefill test was about 32K tokens. Re-benchmark after building a new revision before treating these numbers as a performance guarantee.
+These figures come from different requests and workloads, so they are not an apples-to-apples benchmark. The 18–20 tokens/s result is an owner-reported successful full-context test; the prefill and short-reply numbers are single-run measurements from the earlier lab build. Re-test after changing the model, context settings, or build before treating the figures as a performance guarantee.
 
 ## Tests
 
