@@ -1,18 +1,18 @@
-# fruitystrata
+# FruityStrata
 
-fruitystrata is a hardware-focused deployment fork of [UnbiasedStrata](https://github.com/robertkarl/UnbiasedStrata), itself based on [Strata](https://github.com/Niko1221/Strata) and llama.cpp. This configuration targets a dedicated Alienware laptop with a mobile RTX 2080 Super (8 GB, Turing / `sm_75`), a 10th-generation Intel Core i7, and 64 GB of RAM.
+I made this fork to run [UnbiasedStrata](https://github.com/robertkarl/UnbiasedStrata) on my Alienware and to keep the setup easy to rebuild. UnbiasedStrata is based on [Strata](https://github.com/Niko1221/Strata) and llama.cpp.
 
-The repository contains source and build configuration, not model weights, the prepared expert pack, or the MTP draft files. Those large artifacts must be prepared separately and are not uploaded here.
+My main machine for this is a headless Alienware laptop with a mobile RTX 2080 Super (8 GB, Turing / `sm_75`), a 10th-generation Intel Core i7, and 64 GB of system memory. I use it to run Qwen3.8-Flash-Next. This repo holds the source and build settings. It does not include the model weights, expert pack, or MTP draft files.
 
-## what this fork changes
+## What I changed for my setup
 
-- Builds for Turing (`sm_75`) by default, matching the Alienware's 2080 Super GPU.
-- Links CUDA's driver library explicitly for the native-expert CUDA code.
-- Keeps the upstream project’s model-serving and API implementation; this is a machine-specific configuration, not a rewritten inference engine.
+- I set the default CUDA target to Turing (`sm_75`) for the RTX 2080 Super.
+- I added an explicit CUDA driver library link needed by the native-expert CUDA code.
+- I kept the upstream model-serving and API implementation. This is a hardware-focused fork, not a new inference engine.
 
 ## Build
 
-On Linux x86-64 with AVX2, install a C++20 compiler, CMake 3.24 or newer, the NVIDIA driver, and a compatible CUDA toolkit. Then:
+I build this on Linux x86-64 with AVX2, a C++20 compiler, CMake 3.24 or newer, the NVIDIA driver, and a compatible CUDA toolkit.
 
 ```sh
 git clone --recurse-submodules https://github.com/lolmadi/fruitystrata.git
@@ -20,29 +20,29 @@ cd fruitystrata
 make build
 ```
 
-The default CUDA target is `75`. To build for other NVIDIA architectures, override it, for example:
+The default CUDA target is `75`, which matches my RTX 2080 Super. To build for other NVIDIA GPUs, I can override it. For example:
 
 ```sh
 make build CUDA_ARCHS='86;89;120'
 ```
 
-The resulting executable is `build/unbiased-strata`. The build uses the pinned llama.cpp submodule and does not download models or other runtime assets. `JOBS=N` can cap parallel build jobs.
+The build creates `build/unbiased-strata`. It uses the pinned llama.cpp submodule and does not download model or runtime files. I can cap parallel build jobs with `JOBS=N`.
 
-## Model files
+## Model files I use
 
-The tested configuration uses the full Qwen3.8-Flash-Next GSQ-RCO model at IQ3_XXS quantization, with its prepared expert pack and MTP draft head. See [UPSTREAM.md](UPSTREAM.md) for upstream preparation instructions and artifact details. Keep the two model shards together; the second shard is the n-gram table expected by the engine.
+I run the full Qwen3.8-Flash-Next GSQ-RCO model at IQ3_XXS quantization, with its prepared expert pack and MTP draft head. The preparation instructions and artifact details are in [UPSTREAM.md](UPSTREAM.md). I keep both model shards together because the second shard is the n-gram table the engine expects.
 
-You need paths to:
+Before starting the server, I need paths to:
 
-1. `Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf` (the model argument; shard 2 must be beside it)
-2. The prepared IQ3_XXS pack directory
-3. The prepared MTP directory
+1. `Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf`. I pass this first shard as the model path and keep shard 2 beside it.
+2. The prepared IQ3_XXS pack directory.
+3. The prepared MTP directory.
 
-These files are large and intentionally excluded from Git.
+These files are large, so I keep them out of Git.
 
-## Run
+## Run it
 
-Basic local-only example (the server defaults to `127.0.0.1:8080`):
+For a local-only server, I can use the defaults, which bind to `127.0.0.1:8080`:
 
 ```sh
 ./build/unbiased-strata \
@@ -51,7 +51,7 @@ Basic local-only example (the server defaults to `127.0.0.1:8080`):
   --mtp /path/to/mtp
 ```
 
-The Alienware’s tested profile uses a 131,072-token configured context and the following engine options:
+My Alienware profile uses a 131,072-token context and these engine options:
 
 ```sh
 ./build/unbiased-strata \
@@ -63,44 +63,50 @@ The Alienware’s tested profile uses a 131,072-token configured context and the
   -- --kv-resident 20480 --ple-io direct
 ```
 
-The current Pithagoras `nova-psycho` profile points to `http://<ALIENWARE_LAN_IP>:8081/v1` and uses model ID `qwen3.8-flash-next-iq3_xxs`. The LAN listener has no API authentication: bind only to a trusted private interface, restrict access with the host firewall, and do not port-forward or expose it to the public internet.
+I have Pithagoras's `nova-psycho` profile pointed at `http://<ALIENWARE_LAN_IP>:8081/v1` with model ID `qwen3.8-flash-next-iq3_xxs`.
 
-### Server interface
+The LAN listener has no API key. I only bind it to a trusted private network, keep access restricted with the host firewall, and do not port-forward it to the public internet.
 
-- `POST /v1/chat/completions` — OpenAI-compatible chat, streaming or non-streaming; supports tool calls.
-- `GET /v1/models` — reports the model ID and configured context length.
-- `GET /health` — readiness check.
-- `--ctx N` sets the context length (default 32,768); `--threads N`, `--host`, and `--port` are also available.
-- Reasoning is returned as `reasoning_content`; `reasoning_effort: "none"` disables it.
-- Optional image input requires the model’s vision encoder via `--mmproj`; see upstream documentation before enabling it.
+## API and options
+
+- `POST /v1/chat/completions` serves OpenAI-compatible chat requests, with or without streaming, and supports tool calls.
+- `GET /v1/models` reports the model ID and configured context length.
+- `GET /health` is my readiness check.
+- `--ctx N` sets the context length. The default is 32,768. I can also set `--threads N`, `--host`, and `--port`.
+- Reasoning is returned as `reasoning_content`. I can turn it off with `reasoning_effort: "none"`.
+- Image input needs the model's vision encoder through `--mmproj`. I have not included that in my current voice-free coding setup.
 - Engine-specific options go after `--`.
 
-## Validation and performance notes
+## My test results
 
-The deployed Alienware profile has started successfully with the 131,072-token context setting, the IQ3_XXS pack, and MTP enabled. The owner reports successfully testing a full 128K context at roughly 18–20 tokens/s. The separate smoke-test measurements below came from an earlier Alienware lab build, not a repeatable benchmark of every commit in this repository:
+I have run a full 128K context successfully on the Alienware, at roughly 18 to 20 tokens per second. That is my real-use result, not an independently repeated benchmark.
+
+I also recorded these separate smoke-test measurements on an earlier Alienware lab build:
 
 | Test | Result |
 | --- | ---: |
-| Full 128K context run (owner-reported) | roughly 18–20 tokens/s |
-| Prompt prefill, 32,420-token prompt (separate smoke test) | 146.8 tokens/s |
-| Decode, separate 125-token reply (separate smoke test) | 23.8 tokens/s |
+| Full 128K context run | roughly 18 to 20 tokens/s |
+| Prefill for a 32,420-token prompt | 146.8 tokens/s |
+| Decode for a separate 125-token reply | 23.8 tokens/s |
 
-These figures come from different requests and workloads, so they are not an apples-to-apples benchmark. The 18–20 tokens/s result is an owner-reported successful full-context test; the prefill and short-reply numbers are single-run measurements from the earlier lab build. Re-test after changing the model, context settings, or build before treating the figures as a performance guarantee.
+The prefill and short-reply numbers came from separate requests. They are not directly comparable to each other or to the full-context run. Speed depends on the prompt, cache state, and settings, so I treat these as observations rather than guarantees.
 
 ## Tests
 
-The protocol and child-process tests do not require a model or CUDA:
+I can run the protocol and child-process tests without loading a model or using CUDA:
 
 ```sh
 make test-frontend
 ```
 
-After a full build, the chat-template/parser test can be run against the first model shard:
+After building, I can check the chat template and tool-call parsing against the first model shard:
 
 ```sh
 make test-chat-parser MODEL=/path/to/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf
 ```
 
-## Lineage and license
+## Upstream and license
 
-FruityStrata tracks upstream UnbiasedStrata and carries a small set of local hardware/build changes. See [UPSTREAM.md](UPSTREAM.md) for provenance and upstream preparation notes. The inherited project is MIT-licensed; model and other third-party assets have their own terms. See [LICENSE](LICENSE).
+I track upstream UnbiasedStrata and keep my local changes focused on my hardware and build. [UPSTREAM.md](UPSTREAM.md) has the project history and model preparation notes.
+
+The inherited project is MIT-licensed. Model files and other third-party assets have their own terms. See [LICENSE](LICENSE).
