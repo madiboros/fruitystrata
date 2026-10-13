@@ -1,12 +1,12 @@
-# FruityStrata
+# fruitystrata
 
-FruityStrata is a hardware-focused deployment fork of [UnbiasedStrata](https://github.com/robertkarl/UnbiasedStrata), itself based on [Strata](https://github.com/Niko1221/Strata) and llama.cpp. This configuration targets a dedicated Alienware laptop with a mobile RTX 2080 Super (8 GB, Turing / `sm_75`), a 10th-generation Intel Core i7, and 64 GB of system memory.
+fruitystrata is a hardware-focused deployment fork of [UnbiasedStrata](https://github.com/robertkarl/UnbiasedStrata), itself based on [Strata](https://github.com/Niko1221/Strata) and llama.cpp. This configuration targets a dedicated Alienware laptop with a mobile RTX 2080 Super (8 GB, Turing / `sm_75`), a 10th-generation Intel Core i7, and 64 GB of RAM.
 
-The repository contains source and build configuration—not model weights, the prepared expert pack, or the MTP draft files. Those large artifacts must be prepared separately and are not uploaded here.
+The repository contains source and build configuration, not model weights, the prepared expert pack, or the MTP draft files. Those large artifacts must be prepared separately and are not uploaded here.
 
-## What this fork changes
+## what this fork changes
 
-- Builds for Turing (`sm_75`) by default, matching the Alienware GPU.
+- Builds for Turing (`sm_75`) by default, matching the Alienware's 2080 Super GPU.
 - Links CUDA's driver library explicitly for the native-expert CUDA code.
 - Keeps the upstream project’s model-serving and API implementation; this is a machine-specific configuration, not a rewritten inference engine.
 
